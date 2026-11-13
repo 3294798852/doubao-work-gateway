@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-13",
+  "version": "0.5.0",
+  "repository": "https://github.com/3294798852/doubao-work-gateway",
+  "codeCommit": "f2ad231bdae291d8ca20ab90336a0fac86e6f796",
+  "releaseTag": "v0.5.0",
+  "releaseUrl": "https://github.com/3294798852/doubao-work-gateway/releases/tag/v0.5.0",
+  "ci": {
+    "url": "https://github.com/3294798852/doubao-work-gateway/actions/runs/43386563659",
+    "jobs": [
+      {"os": "windows-2025", "node": 22, "conclusion": "success"},
+      {"os": "windows-2025", "node": 24, "conclusion": "success"},
+      {"os": "ubuntu-24.04", "node": 22, "conclusion": "success"},
+      {"os": "ubuntu-24.04", "node": 24, "conclusion": "success"},
+      {"os": "macos-15", "node": 22, "conclusion": "success"},
+      {"os": "macos-15", "node": 24, "conclusion": "success"}
+    ]
+  },
+  "market": {
+    "channel": "Magpie GitHub plugin discovery",
+    "topic": "magpie-plugin",
+    "githubSearchIndexed": true,
+    "specifier": "github:3294798852/doubao-work-gateway",
+    "packageEntry": "magpie/index.mjs"
+  },
+  "githubInstall": {
+    "bun": "1.4.4",
+    "commit": "f2ad231bdae291d8ca20ab90336a0fac86e6f796",
+    "hostSmoke": "passed"
+  },
+  "licensing": "Original contributions use MIT. Inherited material retains upstream declarations."
+}
