@@ -26,6 +26,8 @@ magpie accounts import doubaowork /absolute/path/doubao-accounts.json --yes
 
 支持浏览器登录、v2/v3 账号备份导入、模型发现、流式与非流式文本、function 工具、推理文本透传、额度查询和每日签到。签到在 Magpie 的账号设置中启用。详细安装和使用方式见 [Magpie 插件说明](docs/magpie.md)，工具协议和验收方式见 [工具调用修复方案](docs/tool-calling.md)。
 
+0.6.1 修复 SSE 提前结束、完整快照漏读和混合增量重复输出，并传递上游提供的标准 token 用量。[短回复排查与验收](docs/sse-output.md)
+
 ## 界面预览
 
 | 工作台 | 接口节点 |
