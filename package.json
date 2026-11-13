@@ -2,7 +2,27 @@
   "name": "doubao-work-gateway",
   "private": true,
   "type": "module",
-  "description": "豆包工作独立账号与 API 网关",
+  "description": "豆包工作跨平台 API 网关与 Magpie 供应商插件",
+  "author": "3294798852",
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": ["magpie-plugin", "opencode-plugin", "doubao-work", "openai-compatible"],
+  "main": "./magpie/index.mjs",
+  "exports": {
+    ".": "./magpie/index.mjs"
+  },
+  "files": [
+    "*.mjs", "*.cmd", "*.sh", "*.command", ".gitattributes",
+    "native/", "magpie/", "public/", "scripts/", "test/", "docs/",
+    "SECURITY.md", "THIRD_PARTY_NOTICES.md", "CHANGELOG.md"
+  ],
+  "magpie": {
+    "name": "豆包工作 API 网关",
+    "icon": "https://raw.githubusercontent.com/3294798852/doubao-work-gateway/main/public/doubao-work-avatar.png",
+    "summary": {
+      "en": "Doubao Work browser sign-in, account JSON import and text chat.",
+      "zh": "豆包工作浏览器登录、账号 JSON 导入、文本转发、额度查询与签到。"
+    }
+  },
   "engines": {
     "node": ">=22"
   },
@@ -13,15 +33,16 @@
     "stop": "node launcher.mjs stop",
     "status": "node launcher.mjs status",
     "doctor": "node launcher.mjs doctor",
-    "secure-cloud": "node launcher.mjs secure-cloud"
+    "secure-cloud": "node launcher.mjs secure-cloud",
+    "test:magpie-host": "node scripts/magpie-smoke.mjs"
   },
-  "version": "0.4.0",
+  "version": "0.5.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/245678000000/doubao-work-gateway.git"
+    "url": "https://github.com/3294798852/doubao-work-gateway.git"
   },
   "bugs": {
-    "url": "https://github.com/245678000000/doubao-work-gateway/issues"
+    "url": "https://github.com/3294798852/doubao-work-gateway/issues"
   },
-  "homepage": "https://github.com/245678000000/doubao-work-gateway#readme"
+  "homepage": "https://github.com/3294798852/doubao-work-gateway#readme"
 }

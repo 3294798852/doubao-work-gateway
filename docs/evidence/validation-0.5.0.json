@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-13",
+  "version": "0.5.0",
+  "gatewayBaseline": "a816f9bcb46d5ea0d7510214fca49c75e5bddd34",
+  "magpieHostBaseline": "11ab58c5874268d2607ff43f6ce13abb366c518b",
+  "runtime": {"node": "24.18.0", "bun": "1.4.4"},
+  "windows": {
+    "system": "Windows 11 build 26200",
+    "syntax": "passed",
+    "fullTests": {"passed": 72, "failed": 0},
+    "quotaAndPluginRecheck": {"passed": 14, "failed": 0},
+    "chromePipeSmoke": "passed",
+    "magpieHost": "passed",
+    "sourceStartCmdStatusStop": "passed"
+  },
+  "linux": {
+    "system": "Ubuntu 22.04.3 LTS on WSL2",
+    "syntax": "passed",
+    "fullTests": {"passed": 72, "failed": 0},
+    "quotaAndPluginRecheck": {"passed": 14, "failed": 0},
+    "magpieHost": "passed"
+  },
+  "commands": [
+    "npm run check",
+    "npm test",
+    "node --test test/native-client.test.mjs test/magpie.test.mjs",
+    "node scripts/browser-smoke.mjs",
+    "npm run test:magpie-host"
+  ],
+  "magpieHostChecks": [
+    "package-load", "account-import", "model-discovery", "nonstream-chat", "stream-chat",
+    "quota", "checkin-once", "verification-error", "restart-account-isolation"
+  ],
+  "credentials": "synthetic fixtures",
+  "realAccountAcceptance": "pending account holder login and live validation",
+  "cleanup": {
+    "linuxIsolatedQaRuntime": "removed",
+    "windowsQaDirectory": ".local/qa",
+    "windowsQaStatus": "retained",
+    "reason": "Automatic approval review rejected recursive and individual temporary-file deletion with blocked by policy."
+  },
+  "artifacts": {
+    "files": ["dist/doubao-work-gateway-0.5.0.zip", "dist/doubao-work-gateway-0.5.0.tgz"],
+    "windowsUnpackedStartCmdStatusStop": "passed",
+    "linuxUnpackedShellStatusStop": "passed",
+    "windowsUnpackedMagpieHost": "passed",
+    "linuxUnpackedMagpieHost": "passed",
+    "rawEvidence": ".local/evidence/0.5.0/"
+  }
+}

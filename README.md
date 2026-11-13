@@ -1,11 +1,30 @@
 <p align="center"><img src="public/doubao-work-avatar.png" width="72" alt="豆包工作头像" /></p>
-<h1 align="center">豆包工作 · 账号管家</h1>
+<h1 align="center">豆包工作 · 跨平台网关与 Magpie 插件</h1>
 <p align="center">只做豆包工作：多账号、每日签到、JSON 备份和 OpenAI 兼容接口。</p>
 <p align="center"><strong>Windows / macOS / Linux</strong> · <strong>Node.js 22+</strong> · <strong>零 npm 运行依赖</strong></p>
 
 <p align="center"><a href="#快速开始">快速开始</a> · <a href="#接入客户端">接入客户端</a> · <a href="#原账号迁移">账号迁移</a> · <a href="#遇到-429--710022004">429 排查</a></p>
 
-> 独立第三方项目，非豆包官方产品。原生版在同一个 Node 进程中运行管理面板与模型 API，无 Agent2API、Magpie、提供商插件或 npm 运行依赖。
+> 独立第三方项目，基于 245678000000/doubao-work-gateway 的原生版继续开发。提供独立网关和 Magpie 供应商插件，两种入口共用豆包协议、会话解析和文本响应编码。
+
+## Magpie 供应商插件
+
+在 [Magpie](https://github.com/yetone/magpie) 中通过 GitHub 安装。Windows 和 Linux 使用相同命令。
+
+```sh
+magpie plugin add github:3294798852/doubao-work-gateway
+magpie plugin login doubaowork
+```
+
+在独立浏览器窗口登录后，Magpie 会发现该账号可用的模型。供应商 ID 为 `doubaowork`，模型在 Magpie 中使用 `doubaowork/<实际模型ID>`。插件直接访问豆包，账号、凭据和转发由 Magpie 管理。
+
+无桌面的 Linux 可从独立网关导出账号 JSON 后导入。
+
+```sh
+magpie accounts import doubaowork /absolute/path/doubao-accounts.json --yes
+```
+
+支持浏览器登录、v2/v3 账号备份导入、模型发现、流式与非流式文本、推理文本透传、额度查询和每日签到。签到在 Magpie 的账号设置中启用。工具调用、图片与工作流仍待实现。详细安装和使用方式见 [Magpie 插件说明](docs/magpie.md)，测试范围见 [本轮验收记录](docs/validation-magpie.md)。
 
 ## 界面预览
 
@@ -26,15 +45,15 @@
 
 ## 快速开始
 
-需要 **Node.js 22 或更高版本**。使用浏览器登录时，还需要 Chrome 或 Edge；带图形桌面的 Linux 也可使用 Chromium。安装 Git 后，执行：
+本节为独立网关的启动方式。
+
+需要 **Node.js 22 或更高版本**。使用浏览器登录时，还需要 Chrome 或 Edge；带图形桌面的 Linux 也可使用 Chromium。解压交付包，进入含有 `package.json` 的目录后运行以下命令。
 
 ```sh
-git clone https://github.com/245678000000/doubao-work-gateway.git
-cd doubao-work-gateway
 npm start
 ```
 
-无需执行 `npm install`。也可从 GitHub 下载源码 ZIP，解压后在项目目录执行 `npm start`。
+从 [GitHub Releases](https://github.com/3294798852/doubao-work-gateway/releases/latest) 下载 ZIP 或 TGZ 源码包，解压后在项目目录执行 `npm start`。前后端只使用 Node.js 内置模块。
 
 1. 打开 [本机面板](http://127.0.0.1:43862)，在工作台点击「添加账号」，在弹出的独立浏览器窗口登录豆包。
 2. 登录后在工作台核对账号状态；添加下一个账号时会开启新的临时会话。
@@ -44,7 +63,7 @@ npm start
 | --- | --- | --- |
 | Windows | `start.cmd` 或 `npm start` | `stop.cmd` 或 `npm stop` |
 | macOS | `./start.command` 或 `npm start` | `./stop.command` 或 `npm stop` |
-| Linux | `./start.sh` 或 `npm start` | `./stop.sh` 或 `npm stop` |
+| Linux | `sh ./start.sh` 或 `npm start` | `sh ./stop.sh` 或 `npm stop` |
 
 也可在启动终端按 Ctrl+C 停止，账号资料会保留。`npm run status` 查看运行状态；`npm run doctor` 检查 Node、运行目录及浏览器。无图形桌面的服务器可用账号 JSON 迁移，见[跨平台说明](docs/platforms.md)。
 
@@ -87,8 +106,13 @@ npm start
 ## 验证与文档
 
 - `npm run check`：源文件语法检查；`npm test`：本地模拟上游、加密库、双端口、导入导出、流式输出和暂停恢复。
-- [Windows、macOS、Linux × Node.js 22 / 24 的 6 个 CI 任务已通过](https://github.com/245678000000/doubao-work-gateway/actions/runs/43378348745)。真实浏览器登录、模型调用和签到需单独验收，详见[验收记录](docs/validation-native.md)。
+- `npm run test:magpie-host` 使用指定的 Magpie Bun 宿主做隔离联调，配置方法见 [插件说明](docs/magpie.md)。
+- [三系统 CI](https://github.com/3294798852/doubao-work-gateway/actions/workflows/ci.yml)覆盖 Windows、macOS、Linux × Node.js 22 / 24。真实账号登录、模型调用和签到的进度见 [0.5.0 验收记录](docs/validation-magpie.md)。
 - [JSON 导入导出](docs/json-transfer.md) · [原生协议](docs/native-protocol.md) · [安全与反馈](SECURITY.md) · [第三方声明](THIRD_PARTY_NOTICES.md)
+
+## 许可证
+
+新增 Magpie 插件代码采用 MIT 许可证。继承代码及素材保留上游的来源和原始声明，授权范围见 [LICENSE](LICENSE) 和 [第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ## 致谢
 

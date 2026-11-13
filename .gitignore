@@ -23,6 +23,8 @@ logs/
 *.pkg
 *.app/
 coverage/
+dist/
+*.tgz
 
 .cloud-target.json
 

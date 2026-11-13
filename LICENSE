@@ -1,0 +1,15 @@
+# Licensing scope
+
+The original Magpie integration contributed by 3294798852 is licensed under
+the MIT License in `magpie/LICENSE`. This covers the original contents of
+`magpie/`, `scripts/magpie-smoke.mjs`, `test/magpie.test.mjs`, and the original
+documentation and modifications contributed in this repository.
+
+Code and assets inherited or extracted from
+https://github.com/245678000000/doubao-work-gateway retain their upstream
+provenance and declarations. The upstream baseline did not specify a
+repository-wide reuse license. See `THIRD_PARTY_NOTICES.md` for the upstream
+source, protocol references, and brand-asset declarations.
+
+The MIT grant applies to the contributor's original work. Licensing of
+inherited third-party material follows its owners' declarations.

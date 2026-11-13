@@ -53,3 +53,24 @@ test('上游 JSON、SSE 验证错误均保留代码，断流不被当成正常�
  const {client}=mock(()=>new Response(frame('CHUNK_DELTA',{text:'part'}),options));
  await assert.rejects(consume(client.chat(s,msg)),/正式结束标记/);
 });
+
+test('额度字段向 Magpie 保留未知百分比与免限状态',async()=>{
+ const client=createDoubaoClient({fetchImpl:async raw=>{
+  if(new URL(raw).pathname.endsWith('/entry/config/'))return reply({data:{membership_display_name:'Fixture'}});
+  return reply({data:{member_info:{hasActiveSubscription:true},window_limit_section:{window_limit_groups:[{
+   feature_group_name:'文本',window_limits:[
+    {window_type:1,exemption:{active:true},used_percent:100,used_amount:10,total_amount:10},
+    {window_type:2},
+    {window_type:4,used_amount:3,total_amount:12},
+   ],
+  }]}}});
+ }});
+ const data=await client.quota(s);
+ assert.equal(data.windows[0].view,'不限');
+ assert.equal(data.windows[0].used,undefined);
+ assert.equal(data.windows[0].limit,undefined);
+ assert.equal(data.windows[1].used,undefined);
+ assert.equal(data.windows[2].used,25);
+ assert.equal(data.windows[2].amount,3);
+ assert.equal(data.windows[2].limit,12);
+});

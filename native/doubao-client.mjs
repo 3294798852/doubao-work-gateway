@@ -119,12 +119,21 @@ function quotaView(overview,entry){
  const windows=rows.map(({group,window:w})=>{
   const type=Number(w.window_type),time={1:'5 小时',2:'近 7 天',4:'每月'}[type]||'订阅额度';
   const pct=value(w.used_percent),used=value(w.used_amount),total=value(w.total_amount);
-  const view=w.unlimited===true||type===1&&w.exemption?.active===true?'不限':pct!==undefined?'已用 '+pct+'%':used!==undefined&&total!==undefined?used+' / '+total:'额度待同步';
-  return {label:[group,time].filter(Boolean).join(' '),view};
+  const unlimited=w.unlimited===true||type===1&&w.exemption?.active===true;
+  const view=unlimited?'不限':pct!==undefined?'已用 '+pct+'%':used!==undefined&&total!==undefined?used+' / '+total:'额度待同步';
+  const share=unlimited?undefined:pct??(used!==undefined&&total>0?used/total*100:undefined);
+  return {label:[group,time].filter(Boolean).join(' '),view,
+   ...(share!==undefined?{used:share}:{}),
+   ...(!unlimited&&used!==undefined&&total!==undefined?{amount:used,limit:total,unit:'credits'}:{})};
  });
  if(!enterprise){
   const bonus=limits(data.incentive_quota_section).find(({window})=>Number(window?.window_type)===3)?.window;
-  if(bonus){const total=value(bonus.total_amount),used=value(bonus.used_amount);windows.push({label:'奖励额度',view:total!==undefined&&used!==undefined?'剩 '+Math.max(0,total-used)+' 额度':'余额待同步'});}
+  if(bonus){
+   const total=value(bonus.total_amount),used=value(bonus.used_amount);
+   const balance=total!==undefined&&used!==undefined?Math.max(0,total-used):undefined;
+   windows.push({label:'奖励额度',view:balance!==undefined?'剩 '+balance+' 额度':'余额待同步',
+    ...(balance!==undefined?{balance,unit:'credits'}:{})});
+  }
  }
  const plan=clean(entry?.data?.membership_display_name??entry?.data?.current_subscription?.display?.short_name??
   data.membership_display_name??data.current_subscription?.display?.short_name);

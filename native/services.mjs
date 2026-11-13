@@ -1,9 +1,11 @@
 import {createHash,randomBytes,randomUUID} from 'node:crypto';
 import {dayTime,validTime,same} from '../core.mjs';
 import {keyName,customKey,publicKey,readableKey} from '../keys.mjs';
-import {jsonShape,label,selectedIds,validId,parseAccountBackup} from '../transfers.mjs';
+import {jsonShape,label,selectedIds,validId} from '../transfers.mjs';
 import {normalizeProviderError} from './protocol.mjs';
 import {onFailure,restore,routable} from './account-state.mjs';
+import {normalizeSession,backupRows} from './session.mjs';
+export {normalizeSession} from './session.mjs';
 
 const fail=(status,message,type)=>Object.assign(new Error(message),{status,type});
 const digest=v=>createHash('sha256').update(v).digest('hex');
@@ -12,37 +14,6 @@ const cleanModels=ms=>[...new Set(Array.isArray(ms)?ms.filter(modelId):[])].slic
 const friendly=(v,max=64)=>label(v).slice(0,max);
 const freshKey=()=> 'sk-dw-'+randomBytes(32).toString('base64url');
 const BAD_NAMES=new Set(['__proto__','constructor','prototype']);
-export function normalizeSession(s){
- const raw=Array.isArray(s?.cookies)?s.cookies.filter(c=>c?.path==='/'&&['doubao.com','www.doubao.com'].includes(String(c.domain).replace(/^\./,''))&&(!c.expires||c.expires<0||c.expires>Date.now()/1000)).map(c=>c.name+'='+c.value).join('; '):s?.cookieHeader;
- if(typeof raw!=='string'||raw.length>32000||/[^\x20-\x7e]/.test(raw))throw fail(400,'豆包网页登录快照格式有误。');
- const pairs=new Map();
- for(const part of raw.split(';')){
-  const m=/^\s*([!#$%&'*+.^_\x60|~A-Za-z0-9-]+)=([\x21-\x3a\x3c-\x7e]*)\s*$/.exec(part);
-  if(!m)throw fail(400,'豆包网页登录快照格式有误。');
-  pairs.set(m[1],m[2]);
- }
- if(!pairs.get('sessionid')&&!pairs.get('sessionid_ss'))throw fail(400,'登录快照缺少豆包会话。');
- const session={cookieHeader:[...pairs].map(([k,v])=>k+'='+v).join('; ')};
- for(const k of ['deviceId','webId','fingerprint','clientVersion','userAgent','channel','chromiumVersion'])
-  if(typeof s[k]==='string'&&s[k].length<=512&&/^[\x20-\x7e]+$/.test(s[k]))session[k]=s[k];
- return session;
-}
-
-function backupRows(value){
- jsonShape(value);
- if(value?.version===2)return parseAccountBackup(value).map(a=>({
-  id:a.id,name:a.name,session:normalizeSession(a.pluginSecret),identity:'',enabled:true,auto:false,alias:'',
- }));
- if(value?.schema!=='doubao-work-accounts/v1'||value.version!==3||!Array.isArray(value.accounts)||value.accounts.length<1||value.accounts.length>20)throw fail(400,'请选择豆包工作账号备份，每次 1–20 个账号。');
- const ids=new Set();
- return value.accounts.map(a=>{
-  if(a?.provider!=='doubaowork'||!validId(a.id)||ids.has(a.id))throw fail(400,'账号备份中有重复、无效或非豆包工作账号。');
-  ids.add(a.id);
-  return {id:a.id,name:friendly(a.name)||'豆包工作账号',session:normalizeSession(a.session),identity:'',
-   enabled:a.enabled!==false,auto:a.auto===true,alias:friendly(a.alias,32)};
- });
-}
-
 export async function createNativeServices({store,client,now=Date.now,bootstrapKey}){
  await store.mutate(d=>{
   if(!d.keys.some(k=>k.builtIn)){

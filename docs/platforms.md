@@ -6,10 +6,14 @@
 | --- | --- | --- |
 | Windows | `start.cmd` 或 `npm start` | `stop.cmd` 或 `npm stop` |
 | macOS | `./start.command` 或 `npm start` | `./stop.command` 或 `npm stop` |
-| Linux | `./start.sh` 或 `npm start` | `./stop.sh` 或 `npm stop` |
+| Linux | `sh ./start.sh` 或 `npm start` | `sh ./stop.sh` 或 `npm stop` |
 
 默认管理地址为 `http://127.0.0.1:43862`，模型地址为 `http://127.0.0.1:43861/v1`。在终端使用 `npm run doctor` 检查运行目录和可用浏览器。自定义浏览器位置可设置绝对路径 `DW_CHROME_BIN` 或 `DW_EDGE_BIN`。
 
 Unix 上使用 0700 / 0600，Windows 上使用当前用户与 SYSTEM 的受限 ACL。运行目录建议放在本机磁盘，不与他人共享。变更端口用 `DW_PANEL_PORT` / `DW_UPSTREAM_PORT`，两个端口必须不同。
 
 CI 对三个系统运行 Node 测试；真实浏览器登录和官网验证仍以账号持有人实测为准。不要把平台路径测试视为真实登录结果。
+
+## Magpie 插件入口
+
+同一份源码也提供 `doubaowork` 供应商。将解压后的项目根目录通过 `magpie plugin add` 加入 Magpie，再运行 `magpie plugin login doubaowork`。无桌面的 Linux 使用 `magpie accounts import doubaowork <账号JSON路径> --yes` 导入桌面环境导出的账号。安装、模型选择及签到设置见 [Magpie 插件说明](magpie.md)。
