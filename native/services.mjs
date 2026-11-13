@@ -4,7 +4,8 @@ import {keyName,customKey,publicKey,readableKey} from '../keys.mjs';
 import {jsonShape,label,selectedIds,validId} from '../transfers.mjs';
 import {normalizeProviderError} from './protocol.mjs';
 import {onFailure,restore,routable} from './account-state.mjs';
-import {normalizeSession,backupRows} from './session.mjs';
+import {normalizeSession,backupRows,withDeviceContext} from './session.mjs';
+import {readDesktopDeviceId} from './desktop-device.mjs';
 export {normalizeSession} from './session.mjs';
 
 const fail=(status,message,type)=>Object.assign(new Error(message),{status,type});
@@ -14,12 +15,13 @@ const cleanModels=ms=>[...new Set(Array.isArray(ms)?ms.filter(modelId):[])].slic
 const friendly=(v,max=64)=>label(v).slice(0,max);
 const freshKey=()=> 'sk-dw-'+randomBytes(32).toString('base64url');
 const BAD_NAMES=new Set(['__proto__','constructor','prototype']);
-export async function createNativeServices({store,client,now=Date.now,bootstrapKey}){
- await store.mutate(d=>{
+export async function createNativeServices({store,client,now=Date.now,bootstrapKey,readDevice=readDesktopDeviceId}){
+ await store.mutate(async d=>{
   if(!d.keys.some(k=>k.builtIn)){
    const key=readableKey(bootstrapKey)?bootstrapKey:freshKey();
    d.keys.push({id:randomUUID(),name:'默认 Key',key,hash:digest(key),enabled:true,builtIn:true,createdAt:now(),allowedModels:[]});
   }
+  for(const account of d.accounts)account.session=await withDeviceContext(account.session,readDevice);
  });
  const busy=new Set(),quarantined=new Set(),previews=new Map();
  let cursor=0,ticking=false,closed=false;
@@ -91,7 +93,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   return e;
  }
  async function importCookies(input,{expectedId,signal}={}){
-  const session=normalizeSession(input);
+  const session=await withDeviceContext(normalizeSession(input),readDevice);
   let info,models=[],catalogState='unknown';
   try{info=await client.identity(session,{signal});}catch(e){throw classify(e);}
   const identity=info?.identity;
@@ -135,14 +137,15 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   previews.delete(token);
   return store.mutate(d=>applyRows(d,item.rows,duplicates));
  }
- function applyRows(d,rows,duplicates){
+ async function applyRows(d,rows,duplicates){
   const result={total:rows.length,added:0,updated:0,skipped:0,failed:0};
   for(const a of rows){
    const existing=d.accounts.find(b=>b.id===a.id);
    // A file does not prove identity. Never replace a verified session with an unverified backup.
    if(existing&&(duplicates==='skip'||existing.identity||busy.has(a.id))){result.skipped++;continue;}
    if(!existing&&d.accounts.length>=200){result.failed++;continue;}
-   const row={...a,epoch:randomUUID(),state:'needs_login',models:[]};
+   const session=await withDeviceContext(a.session,readDevice);
+   const row={...a,session,epoch:randomUUID(),state:'needs_login',models:[]};
    if(existing){Object.assign(existing,row);result.updated++;}else{d.accounts.push(row);result.added++;}
   }
   return result;
@@ -150,9 +153,9 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
  async function migrateLegacy(input){
   const rows=[];
   for(let i=0;i<input.accounts.length;i+=20)rows.push(...backupRows({schema:'doubao-work-accounts/v1',version:3,accounts:input.accounts.slice(i,i+20)}));
-  return store.mutate(d=>{
+  return store.mutate(async d=>{
    const pristine=d.accounts.length===0;
-   const result=applyRows(d,rows,'skip');
+   const result=await applyRows(d,rows,'skip');
    if(pristine){d.scheduler.enabled=input.scheduler.enabled;d.scheduler.time=input.scheduler.time;
     d.scheduler.attempted=Object.fromEntries(Object.entries(input.scheduler.attempted).filter(([id])=>rows.some(r=>r.id===id)));}
    return result;

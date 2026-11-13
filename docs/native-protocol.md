@@ -4,6 +4,8 @@
 
 桌面接口的设备号按账号快照 `deviceId`、`device_id` Cookie、本机客户端 `Local State` 的顺序读取。存在设备号时使用对应的 `fp=verify_<device_id>`，本机文件查询结果缓存 60 秒。设备查询覆盖 `Doubao` 与 `DoubaoWork` 的 Windows、Linux、macOS 应用目录，已有账号通过同一请求路径补齐设备参数。
 
+0.5.2 将解析逻辑集中到 `withDeviceContext`。网关登录、导入、启动升级与 Magpie 登录、旧账号首次加载会将上下文持久保存，v2/v3 备份保留设备和客户端元数据。运行在无客户端环境的目标节点通过账号快照直接取得设备参数。
+
 | 能力 | 适配请求 | 说明 |
 | --- | --- | --- |
 | 身份 | `GET /passport/account/info/v2/` | 取无损账号 ID 与企业身份字段；身份成功不自动恢复转发 |

@@ -8,7 +8,7 @@ import {createDoubaoClient} from './doubao-client.mjs';
 import {ingress} from '../ingress.mjs';
 
 export async function startNative({dir,tmpRoot=join(dir,'browser-tmp'),modelPort=43861,panelPort=43862,
- client=createDoubaoClient(),publicOrigin,proxyToken,bootstrapKey,timer=true,now=Date.now,browserLoginOptions,cloudConfigPath,cloudFetch}){
+ client=createDoubaoClient(),publicOrigin,proxyToken,bootstrapKey,timer=true,now=Date.now,browserLoginOptions,cloudConfigPath,cloudFetch,readDevice}){
  for(const p of [modelPort,panelPort])if(!Number.isInteger(p)||p<0||p>65535||p>0&&p<1024)throw Error('网关端口有误。');
  if(modelPort&&modelPort===panelPort)throw Error('面板与模型 API 需要不同端口。');
  // Validate cloud configuration before writing data or listening.
@@ -36,7 +36,7 @@ export async function startNative({dir,tmpRoot=join(dir,'browser-tmp'),modelPort
   })();return stopping;
  }
  try{
-  services=await createNativeServices({store,client,now,bootstrapKey});
+  services=await createNativeServices({store,client,now,bootstrapKey,readDevice});
   modelServer=createServer(createModelHandler({services,shutdown:abort.signal,
    accepts:req=>req.headers.host==='127.0.0.1:'+portOf(modelServer)||!!remote?.accepts(req)}));
   // Keep both listeners gated until startup succeeds.

@@ -93,6 +93,10 @@ npm start
 
 Windows 使用 `%LOCALAPPDATA%\Doubao\User Data\Local State`，Linux 使用 `$XDG_CONFIG_HOME/Doubao/Local State`（默认 `~/.config/Doubao/Local State`），macOS 使用 `~/Library/Application Support/Doubao/Local State`，同时兼容 `DoubaoWork` 目录。无本机客户端的 Linux 可导入包含本人客户端 `session.deviceId` 的账号备份。
 
+0.5.2 会在登录、备份导入和旧账号启动升级时保存取得的设备号与配套指纹。正常导出的账号 JSON 包含完整上下文，迁移后的目标设备优先使用账号携带的信息。每位用户使用自己客户端或备份中的设备信息。
+
+Windows 导出账号到隔离 Ubuntu 的真实迁移已通过，目标环境的网关和 Magpie Bun 宿主均返回 `OK`。无客户端服务器可按[账号迁移说明](docs/json-transfer.md)接入。
+
 这表示豆包上游要求人工验证，与普通限流和额度耗尽分开显示。网关暂停实际触发的账号，保留状态和请求编号；不会把本次请求自动转给其他账号，也不会在后台换模型重试。
 
 1. 使用同一个账号打开[豆包官网](https://www.doubao.com/chat/)，发一条普通消息并完成页面提示的验证。
