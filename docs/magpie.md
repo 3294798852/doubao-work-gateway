@@ -1,5 +1,7 @@
 # Magpie 豆包工作供应商
 
+插件已独立发布到 [magpie-doubao-work](https://github.com/3294798852/magpie-doubao-work)，安装、更新和中英文说明由该仓库维护。
+
 供应商 ID 为 `doubaowork`。独立网关和 Magpie 插件共用原生豆包协议，插件由 Magpie 的 Bun 宿主加载。
 
 ## 安装
@@ -7,7 +9,7 @@
 安装近期版本的 Magpie，通过 GitHub 安装本插件。
 
 ```sh
-magpie plugin add github:3294798852/doubao-work-gateway
+magpie plugin add github:3294798852/magpie-doubao-work
 magpie plugin login doubaowork
 ```
 

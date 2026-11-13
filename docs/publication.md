@@ -28,3 +28,7 @@ Magpie 的 GitHub 插件发现读取带有 `magpie-plugin` 标签的公开独立
 GitHub 搜索已收录本仓库的 `magpie-plugin` 标签。通过 Bun 1.4.4 从 GitHub 安装该提交后，安装目录通过真实 Magpie Bun 宿主的账号导入、模型发现、文本、额度、签到及重启隔离检查。
 
 本记录之后的发行准备只涉及发布文档，代码验证沿用上述提交的结果。机器可读数据见 [发布验收数据](evidence/publication-0.5.0.json)。
+
+## 独立插件仓库
+
+Magpie 插件于 2026-11-13 拆分为 [magpie-doubao-work](https://github.com/3294798852/magpie-doubao-work)。当前插件安装入口为 `github:3294798852/magpie-doubao-work`，其独立仓库提供中英文说明、主题和检索元数据。插件市场发现使用该独立仓库的 `magpie-plugin` 标签。

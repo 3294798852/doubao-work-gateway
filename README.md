@@ -1,18 +1,18 @@
 <p align="center"><img src="public/doubao-work-avatar.png" width="72" alt="豆包工作头像" /></p>
-<h1 align="center">豆包工作 · 跨平台网关与 Magpie 插件</h1>
+<h1 align="center">豆包工作 · 跨平台 API 网关</h1>
 <p align="center">只做豆包工作：多账号、每日签到、JSON 备份和 OpenAI 兼容接口。</p>
 <p align="center"><strong>Windows / macOS / Linux</strong> · <strong>Node.js 22+</strong> · <strong>零 npm 运行依赖</strong></p>
 
 <p align="center"><a href="#快速开始">快速开始</a> · <a href="#接入客户端">接入客户端</a> · <a href="#原账号迁移">账号迁移</a> · <a href="#遇到-429--710022004">429 排查</a></p>
 
-> 独立第三方项目，基于 245678000000/doubao-work-gateway 的原生版继续开发。提供独立网关和 Magpie 供应商插件，两种入口共用豆包协议、会话解析和文本响应编码。
+> 独立第三方项目，基于 245678000000/doubao-work-gateway 的原生版继续开发。本仓库提供跨平台独立网关，Magpie 供应商插件由独立仓库 [magpie-doubao-work](https://github.com/3294798852/magpie-doubao-work) 分发。
 
 ## Magpie 供应商插件
 
-在 [Magpie](https://github.com/yetone/magpie) 中通过 GitHub 安装。Windows 和 Linux 使用相同命令。
+插件的中英文使用说明、更新和问题反馈位于 [magpie-doubao-work](https://github.com/3294798852/magpie-doubao-work)。Windows 和 Linux 使用相同安装命令。
 
 ```sh
-magpie plugin add github:3294798852/doubao-work-gateway
+magpie plugin add github:3294798852/magpie-doubao-work
 magpie plugin login doubaowork
 ```
 
