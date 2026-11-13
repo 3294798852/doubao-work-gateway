@@ -89,6 +89,10 @@ npm start
 
 ## 遇到 429 / 710022004
 
+官网和豆包客户端正常、网关持续返回此错误时，检查设备参数。0.5.1 起，网关优先使用账号快照的 `deviceId` 或 `device_id` Cookie，并自动查询本机豆包客户端 `Local State` 的 `aha.device.device_id`，为桌面接口发送配套的 `device_id` 与 `fp=verify_<device_id>`。
+
+Windows 使用 `%LOCALAPPDATA%\Doubao\User Data\Local State`，Linux 使用 `$XDG_CONFIG_HOME/Doubao/Local State`（默认 `~/.config/Doubao/Local State`），macOS 使用 `~/Library/Application Support/Doubao/Local State`，同时兼容 `DoubaoWork` 目录。无本机客户端的 Linux 可导入包含本人客户端 `session.deviceId` 的账号备份。
+
 这表示豆包上游要求人工验证，与普通限流和额度耗尽分开显示。网关暂停实际触发的账号，保留状态和请求编号；不会把本次请求自动转给其他账号，也不会在后台换模型重试。
 
 1. 使用同一个账号打开[豆包官网](https://www.doubao.com/chat/)，发一条普通消息并完成页面提示的验证。

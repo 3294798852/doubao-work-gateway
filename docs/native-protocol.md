@@ -2,6 +2,8 @@
 
 网关通过固定的 `https://www.doubao.com` 访问豆包工作，重定向视为失败。地址不接受账号备份、节点配置或模型输入覆盖。协议实现参考现有独立适配源码及豆包官网公开前端资源；无需旧核心、插件宿主或其二进制。源码来源和许可见 [第三方声明](../THIRD_PARTY_NOTICES.md)。
 
+桌面接口的设备号按账号快照 `deviceId`、`device_id` Cookie、本机客户端 `Local State` 的顺序读取。存在设备号时使用对应的 `fp=verify_<device_id>`，本机文件查询结果缓存 60 秒。设备查询覆盖 `Doubao` 与 `DoubaoWork` 的 Windows、Linux、macOS 应用目录，已有账号通过同一请求路径补齐设备参数。
+
 | 能力 | 适配请求 | 说明 |
 | --- | --- | --- |
 | 身份 | `GET /passport/account/info/v2/` | 取无损账号 ID 与企业身份字段；身份成功不自动恢复转发 |
