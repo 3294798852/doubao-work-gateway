@@ -42,7 +42,7 @@ Magpie 的账号开关、代理、路由和签到开关在 Magpie 中设置。�
 
 ## 文本调用与签到
 
-插件实现 OpenAI 风格 `chat/completions`，支持文本角色、多轮历史、文本分块、流式与非流式回复，以及上游返回的 `reasoning_content`。流式输出随消费者拉取，取消请求会中止上游并释放账号。工具调用、结构化输出、图片和工作流仍待实现。
+插件实现 OpenAI 风格 `chat/completions`，支持多轮文本、function 工具、工具结果回传、流式与非流式回复，以及上游返回的 `reasoning_content`。流式输出随消费者拉取，取消请求会中止上游并释放账号。严格约束解码、结构化输出、图片和工作流待实现。工具协议与范围见 [工具调用说明](tool-calling.md)。
 
 额度通过 Magpie 用量页读取，数值与展示文字来自上游。目前目录适配提供模型 ID，上下文和输出上限仍待补充。
 
@@ -58,6 +58,7 @@ Magpie 的账号开关、代理、路由和签到开关在 Magpie 中设置。�
 | `native/doubao-client.mjs`、`native/doubao-stream.mjs` | 官方请求、账号模型目录和上游事件解析 |
 | `native/session.mjs` | 两种运行方式共用的会话与账号备份解析 |
 | `native/completion.mjs` | 共用请求解析、文本响应编码和错误结构 |
+| `native/tool-calling.mjs` | 客户端 function 工具声明、协议转换和响应校验 |
 | `magpie/provider.mjs` | Magpie 供应商配置、账号钩子、模型、额度及签到 |
 | `magpie/login.mjs`、`magpie/response.mjs` | 隔离浏览器登录和 Fetch Response 流适配 |
 

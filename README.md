@@ -24,7 +24,7 @@ magpie plugin login doubaowork
 magpie accounts import doubaowork /absolute/path/doubao-accounts.json --yes
 ```
 
-支持浏览器登录、v2/v3 账号备份导入、模型发现、流式与非流式文本、推理文本透传、额度查询和每日签到。签到在 Magpie 的账号设置中启用。工具调用、图片与工作流仍待实现。详细安装和使用方式见 [Magpie 插件说明](docs/magpie.md)，测试范围见 [本轮验收记录](docs/validation-magpie.md)。
+支持浏览器登录、v2/v3 账号备份导入、模型发现、流式与非流式文本、function 工具、推理文本透传、额度查询和每日签到。签到在 Magpie 的账号设置中启用。详细安装和使用方式见 [Magpie 插件说明](docs/magpie.md)，工具协议和验收方式见 [工具调用修复方案](docs/tool-calling.md)。
 
 ## 界面预览
 
@@ -41,7 +41,7 @@ magpie accounts import doubaowork /absolute/path/doubao-accounts.json --yes
 - **自动签到**：北京时间计划，按账号选择；同日有提交记录后只回查，不重复领取。
 - **两类 JSON**：账号备份用于登录迁移；节点 JSON 用于保存客户端的 Base URL、模型及可选 Key，不参与转发选路。
 - **自建 API Key**：随机生成或指定内容，支持命名、复制、启停；模型 Key 与管理接口分离。
-- **文本 API**：`/v1/models` 与 `/v1/chat/completions`，支持流式和非流式文本。不承诺原生工具调用、图片及工作流兼容。
+- **文本与工具 API**：`/v1/models` 与 `/v1/chat/completions`，支持流式和非流式文本、客户端 function 工具与结果回传。
 
 ## 快速开始
 

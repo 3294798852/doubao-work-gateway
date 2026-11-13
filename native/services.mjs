@@ -76,7 +76,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
    plan:a.plan||'',quota:a.quota||[],quotaState:a.quotaState||'unknown',models:a.models||[]};
  };
  const catalog=(accounts=store.snapshot().accounts)=>cleanModels(accounts.filter(a=>a.enabled).flatMap(a=>a.models||[]));
- const classify=e=>normalizeProviderError(e,{httpStatus:e?.status||502});
+ const classify=e=>e?.type?e:normalizeProviderError(e,{httpStatus:e?.status||502});
  async function failed(account,error,requestId,{retest=false}={}){
   const e=classify(error);
   if(e.state){
@@ -256,11 +256,11 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
    });
    for await(const delta of client.chat(a.session,body,{signal})){
     signal?.throwIfAborted();
-    if(typeof delta?.content==='string'&&delta.content){produced=true;yield {content:delta.content};}
-    else if(typeof delta?.reasoning_content==='string'&&delta.reasoning_content)yield {reasoning_content:delta.reasoning_content};
+    if(delta.content||delta.tool_calls?.length)produced=true;
+    yield delta;
    }
    signal?.throwIfAborted();
-   if(!produced)throw fail(502,'豆包工作未返回文本。');
+   if(!produced)throw fail(502,'豆包工作未返回文本或工具调用。');
    if(retest)await store.mutate(d=>{const x=find(d.accounts,a.id);if(x.epoch===a.epoch){x.state='ready';x.upstreamCode=0;x.failureType='';x.retryAt=0;}});
   }catch(e){if(signal?.aborted)throw e;throw await failed(a,e,requestId,{retest});}
   finally{busy.delete(a.id);}
