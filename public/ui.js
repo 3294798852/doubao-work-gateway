@@ -110,23 +110,15 @@ function renderAccounts(){
     top.append(e('div','avatar',Array.from(a.name)[0]||'豆'),name,badges);management.decorateAccount(article,top,a);
     if(a.state==='needs_verification'||a.retestPending){
       const box=e('div','verification-note'),copy=e('div','verification-copy'),controls=e('div','verification-actions');
-      copy.append(e('strong','',a.retestPending?'验证已确认 · 等待复测':'这个账号已暂停转发'),
-        e('p','',a.retestPending?'发送一条简短测试消息。成功后才会重新参与转发。':'请用同一个账号在豆包官网发一条消息，按提示完成人机验证，再回来确认。'));
+      copy.append(e('strong','',a.retestPending?'等待一次完整复测':'上次请求需要人工验证'),
+        e('p','','请用同一个账号在豆包官网或客户端完成验证，然后复测此账号或重新发送 API 请求。成功后清除待验证状态。'));
       if(a.lastRequestId)copy.append(e('small','',a.lastRequestId));
-      if(!a.retestPending){
-        const official=e('a','secondary small','打开豆包官网');official.href='https://www.doubao.com/chat/';official.target='_blank';official.rel='noopener noreferrer';
-        controls.append(official,button('已完成验证',async()=>{
-          if(!window.confirm('请确认：你已在豆包官网使用这个账号发送消息，并完成页面要求的人工验证。'))return;
-          await api('/api/verification/restore',{id:a.id,confirmed:true});return '已确认；请手动发起一次复测。';
-        },'primary small'));
-      }else{
-        const probe=button('复测一次',async()=>{
-          if(!window.confirm('使用此账号向豆包工作发送「请只回复 OK」，会计入该账号的使用。继续吗？'))return;
-          try{await api('/api/verification/retest',{id:a.id,model:a.models[0]});return '复测成功，账号已恢复转发。';}
-          catch(error){await load();throw error;}
-        },'primary small');
-        probe.disabled=!a.enabled||!a.models?.length;controls.append(probe);
-      }
+      const official=e('a','secondary small','打开豆包官网');official.href='https://www.doubao.com/chat/';official.target='_blank';official.rel='noopener noreferrer';
+      const probe=button('复测此账号',async()=>{
+        try{await api('/api/verification/retest',{id:a.id,model:a.models[0]});return '复测成功，账号已恢复转发。';}
+        catch(error){await load();throw error;}
+      },'primary small');
+      probe.disabled=!a.enabled||!a.models?.length;controls.append(official,probe);
       box.append(copy,controls);article.append(top,box);
     }
     const quota=e('div','quota');

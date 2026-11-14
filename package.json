@@ -36,7 +36,7 @@
     "secure-cloud": "node launcher.mjs secure-cloud",
     "test:magpie-host": "node scripts/magpie-smoke.mjs"
   },
-  "version": "0.6.1",
+  "version": "0.6.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/3294798852/doubao-work-gateway.git"

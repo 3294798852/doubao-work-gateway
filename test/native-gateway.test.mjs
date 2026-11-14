@@ -45,7 +45,7 @@ test('独立双端口：验证暂停持久化、明确复测、不接力；API K
  assert.match(await stream.text(),/data: \[DONE\]/);
 });
 
-test('流中触发验证：返回错误事件，不发送 DONE；该账号立即停止选路',async t=>{
+test('流中触发验证返回错误事件，每个新请求重新取得上游结果',async t=>{
  const root=await mkdtemp(join(tmpdir(),'dw-native-stream-'));
  let calls=0;
  const app=await startNative({dir:root,modelPort:0,panelPort:0,timer:false,client:{
@@ -58,5 +58,44 @@ test('流中触发验证：返回错误事件，不发送 DONE；该账号立即
  const r=await ask();assert.equal(r.status,200);
  const text=await r.text();assert.match(text,/partial/);assert.match(text,/event: error/);assert.match(text,/710022004/);assert(!text.includes('[DONE]'));
  assert.equal(app.services.snapshot().accounts.find(a=>a.id===id).state,'needs_verification');
- assert.equal((await ask()).status,429);assert.equal(calls,1);
+ const retried=await ask(),again=await retried.text();
+ assert.equal(retried.status,200);assert.match(again,/710022004/);assert(!again.includes('[DONE]'));assert.equal(calls,2);
+});
+
+test('旧验证状态在新聊天成功后恢复，自动签到保留暂停直到确认成功',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'dw-verification-recovery-'));
+ let verified=false,calls=0,checkins=0,failure={upstream_code:710022004};
+ const app=await startNative({dir:root,modelPort:0,panelPort:0,timer:false,readDevice:async()=>undefined,client:{
+  identity:async()=>({identity:'fixture:recover',name:'测试'}),models:async()=>['fixture'],
+  async *chat(){calls++;if(!verified)throw failure;yield {content:'verified result'};},
+  checkin:async()=>{checkins++;return {status:'done'};},
+ }});
+ t.after(async()=>{await app.stop();await rm(root,{recursive:true,force:true});});
+ const {id}=await app.services.importCookies({cookieHeader:'sessionid=fixture'});
+ await app.services.changeAccounts([id],{auto:true});
+ await app.services.setSchedule({enabled:true,time:'00:00'});
+ const ask=()=>fetch(app.modelOrigin+'/v1/chat/completions',{method:'POST',
+  headers:{Authorization:'Bearer '+app.services.keys.defaultKey(),'Content-Type':'application/json'},
+  body:JSON.stringify({model:'fixture',messages:[{role:'user',content:'verify'}]})});
+ const first=await ask();assert.equal(first.status,429);await first.text();
+ assert.equal(app.services.snapshot().accounts[0].state,'needs_verification');
+ await app.services.tick();assert.equal(checkins,0);assert.equal(calls,1);
+ verified=true;
+ const next=await ask();assert.equal(next.status,200);assert.equal((await next.json()).choices[0].message.content,'verified result');
+ assert.equal(calls,2);assert.equal(app.services.snapshot().accounts[0].state,'ready');
+ assert.equal(app.services.snapshot().accounts[0].upstreamCode,0);
+ await app.services.tick();assert.equal(checkins,1);
+ verified=false;
+ const challenged=await ask();assert.equal(challenged.status,429);await challenged.text();
+ verified=true;
+ const retest=await fetch(app.panelOrigin+'/api/verification/retest',{method:'POST',
+  headers:{'X-Doubao-Panel':'1',Origin:app.panelOrigin,'Content-Type':'application/json'},
+  body:JSON.stringify({id,model:'fixture'})});
+ assert.equal(retest.status,200);await retest.text();assert.equal(calls,4);
+ assert.equal(app.services.snapshot().accounts[0].state,'ready');
+ verified=false;
+ const again=await ask();assert.equal(again.status,429);await again.text();
+ failure={status:401};
+ const expired=await ask();assert.equal(expired.status,401);await expired.text();
+ assert.equal(app.services.snapshot().accounts[0].state,'needs_login');
 });

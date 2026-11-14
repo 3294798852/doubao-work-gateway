@@ -3,7 +3,7 @@ import {dayTime,validTime,same} from '../core.mjs';
 import {keyName,customKey,publicKey,readableKey} from '../keys.mjs';
 import {jsonShape,label,selectedIds,validId} from '../transfers.mjs';
 import {normalizeProviderError} from './protocol.mjs';
-import {onFailure,restore,routable} from './account-state.mjs';
+import {onFailure,restore,routable,chatRoutable,onChatSuccess} from './account-state.mjs';
 import {normalizeSession,backupRows,withDeviceContext} from './session.mjs';
 import {readDesktopDeviceId} from './desktop-device.mjs';
 export {normalizeSession} from './session.mjs';
@@ -77,7 +77,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
  };
  const catalog=(accounts=store.snapshot().accounts)=>cleanModels(accounts.filter(a=>a.enabled).flatMap(a=>a.models||[]));
  const classify=e=>e?.type?e:normalizeProviderError(e,{httpStatus:e?.status||502});
- async function failed(account,error,requestId,{retest=false}={}){
+ async function failed(account,error,requestId){
   const e=classify(error);
   if(e.state){
    quarantined.add(account.id);
@@ -85,7 +85,6 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
    const a=find(d.accounts,account.id);
     if(a.epoch===account.epoch){
      Object.assign(a,onFailure(a,{upstream_code:e.upstream_code,status:e.status,retryAfterMs:error?.retryAfterMs},{now:now(),requestId}));
-     if(retest||account.state==='needs_verification')Object.assign(a,{state:'needs_verification',retryAt:0,verificationRestored:false});
     }
    });
    quarantined.delete(account.id);
@@ -230,16 +229,16 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   const list=store.snapshot().accounts.filter(a=>a.enabled);
   if(retest){
    const a=find(list,id);
-   if(!a.verificationRestored||a.state!=='ready'||!a.models.includes(model)||busy.has(id))throw fail(409,'该账号当前没有可执行的验证复测。');
+   if(!(a.state==='needs_verification'||a.state==='ready'&&a.verificationRestored)||!a.models.includes(model)||busy.has(id))throw fail(409,'该账号当前没有可执行的验证复测。');
    return a;
   }
   const eligible=list.filter(a=>a.models.includes(model));
-  const readyRows=eligible.filter(a=>ready(a));
+  const available=eligible.filter(a=>chatRoutable(a,now())&&!quarantined.has(a.id));
+  const preferred=available.filter(ready);
+  const readyRows=preferred.length?preferred:available;
   const free=readyRows.filter(a=>!busy.has(a.id));
   if(free.length)return free[cursor++%free.length];
   if(readyRows.length)throw fail(429,'可用账号正在处理请求。','accounts_busy');
-  if(eligible.some(a=>a.state==='needs_verification'))throw normalizeProviderError({code:710022004});
-  if(eligible.some(a=>a.verificationRestored))throw fail(409,'请先在面板完成指定账号的人工复测。','verification_retest_pending');
   if(eligible.some(a=>a.state==='rate_limited'))throw normalizeProviderError({},{httpStatus:429});
   throw fail(503,'该模型目前没有就绪的豆包工作账号。','no_available_account');
  }
@@ -248,12 +247,6 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   const a=select(body.model,{id,retest});busy.add(a.id);
   let produced=false;
   try{
-   if(retest)await store.mutate(d=>{
-    const x=find(d.accounts,a.id);
-    if(!x.verificationRestored||x.epoch!==a.epoch||!x.enabled)throw fail(409,'验证复测状态已变化。');
-    // Reserve before sending. Interrupted/crashed probes remain paused.
-    x.verificationRestored=false;x.state='needs_verification';
-   });
    for await(const delta of client.chat(a.session,body,{signal})){
     signal?.throwIfAborted();
     if(delta.content||delta.tool_calls?.length)produced=true;
@@ -261,8 +254,9 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
    }
    signal?.throwIfAborted();
    if(!produced)throw fail(502,'豆包工作未返回文本或工具调用。');
-   if(retest)await store.mutate(d=>{const x=find(d.accounts,a.id);if(x.epoch===a.epoch){x.state='ready';x.upstreamCode=0;x.failureType='';x.retryAt=0;}});
-  }catch(e){if(signal?.aborted)throw e;throw await failed(a,e,requestId,{retest});}
+   if(retest||a.state==='needs_verification'||a.verificationRestored)
+    await store.mutate(d=>{const x=find(d.accounts,a.id);if(x.epoch===a.epoch)Object.assign(x,onChatSuccess(x));});
+  }catch(e){if(signal?.aborted)throw e;throw await failed(a,e,requestId);}
   finally{busy.delete(a.id);}
  }
  return {
