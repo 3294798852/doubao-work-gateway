@@ -20,8 +20,8 @@ export async function createNativePanel({dir,tmpRoot,services,originForPort,mode
  const cloudSync=cloudConfigPath?createCloudSync({configPath:cloudConfigPath,fetchImpl:cloudFetch,
   exportAccounts:services.exportAccounts}):null;
  const login=new BrowserLogin({...browserLoginOptions,tmpRoot,
-  async importAccount(cookies,{destination,expectedId}={}){
-   const account=await services.importCookies({cookies},{expectedId,signal:shutdown});
+  async importAccount(cookies,{destination,expectedId}={},metadata){
+   const account=await services.importCookies({cookies,...metadata,clientProfile:'web'},{expectedId,signal:shutdown});
    if(destination==='cloud'){
     const r=await cloudSync.sync([account.id]);
     return {...account,cloudSynced:true,cloudOrigin:r.origin};

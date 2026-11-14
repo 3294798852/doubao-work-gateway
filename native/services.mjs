@@ -25,6 +25,8 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
  });
  const busy=new Set(),quarantined=new Set(),previews=new Map();
  let cursor=0,ticking=false,closed=false;
+ const prepareSession=(session,options)=>client.prepareSession
+  ?client.prepareSession(session,options):withDeviceContext(session,readDevice);
  const find=(list,id)=>{
   if(!validId(id))throw fail(400,'账号标识无效。');
   const a=list.find(a=>a.id===id);if(!a)throw fail(404,'未找到这个豆包工作账号。');return a;
@@ -92,7 +94,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   return e;
  }
  async function importCookies(input,{expectedId,signal}={}){
-  const session=await withDeviceContext(normalizeSession(input),readDevice);
+  const session=await prepareSession(normalizeSession(input),{signal});
   let info,models=[],catalogState='unknown';
   try{info=await client.identity(session,{signal});}catch(e){throw classify(e);}
   const identity=info?.identity;
@@ -176,6 +178,16 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   selectedIds(ids);
   return store.mutate(d=>{for(const id of ids)Object.assign(find(d.accounts,id),patch);return {completed:ids.length,unknown:0,notAttempted:0};});
  }
+ async function sessionFor(account,{signal}={}){
+  const session=await prepareSession(account.session,{signal});
+  signal?.throwIfAborted();
+  if(session!==account.session)await store.mutate(d=>{
+   const current=find(d.accounts,account.id);
+   if(current.epoch!==account.epoch)throw fail(409,'账号登录状态已更新，请重试。');
+   current.session=session;
+  });
+  return session;
+ }
  async function quota(id,{signal}={}){
   if(!client.quota)throw fail(503,'额度查询尚未接入。');
   const a=find(store.snapshot().accounts,id);
@@ -183,7 +195,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   if(busy.has(id))throw fail(409,'该账号正在处理另一请求。');
   busy.add(id);
   try{
-   const data=await client.quota(a.session,{signal});
+   const data=await client.quota(await sessionFor(a,{signal}),{signal});
    await store.mutate(d=>{const x=find(d.accounts,id);if(x.epoch===a.epoch){x.plan=friendly(data?.plan);x.quota=(Array.isArray(data?.windows)?data.windows:[]).slice(0,8).map(q=>({label:friendly(q.label),view:friendly(q.view)}));x.quotaState='ok';}});
    return {ok:true};
   }catch(e){throw await failed(a,e,randomUUID());}finally{busy.delete(id);}
@@ -201,7 +213,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
    await store.mutate(d=>{d.scheduler.attempted=Object.fromEntries(Object.entries(d.scheduler.attempted).filter(([,v])=>v.day===day));d.scheduler.attempted[id]={day,at:now(),status:'submitting',reserved:queryOnly};});
    let status;
    try{
-    const result=await client.checkin(a.session,{signal,queryOnly,async reserve(){
+    const result=await client.checkin(await sessionFor(a,{signal}),{signal,queryOnly,async reserve(){
      if(queryOnly||date().day!==day)throw fail(409,'领取日期已变化或已有提交记录。');
      await store.mutate(d=>{
       const x=d.scheduler.attempted[id],current=find(d.accounts,id);
@@ -247,7 +259,7 @@ export async function createNativeServices({store,client,now=Date.now,bootstrapK
   const a=select(body.model,{id,retest});busy.add(a.id);
   let produced=false;
   try{
-   for await(const delta of client.chat(a.session,body,{signal})){
+   for await(const delta of client.chat(await sessionFor(a,{signal}),body,{signal})){
     signal?.throwIfAborted();
     if(delta.content||delta.tool_calls?.length)produced=true;
     yield delta;

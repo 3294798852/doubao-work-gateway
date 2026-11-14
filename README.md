@@ -91,19 +91,15 @@ npm start
 
 ## 遇到 429 / 710022004
 
-官网和豆包客户端正常、网关持续返回此错误时，检查设备参数。0.5.1 起，网关优先使用账号快照的 `deviceId` 或 `device_id` Cookie，并自动查询本机豆包客户端 `Local State` 的 `aha.device.device_id`，为桌面接口发送配套的 `device_id` 与 `fp=verify_<device_id>`。
+0.6.3 浏览器登录会从豆包官网自动取得该会话的 Web ID、应用 ID和客户端版本，保存浏览器元数据、指纹与官网签发的 Cookie。模型、聊天、额度和签到使用对应的 Web 请求参数，无需安装豆包桌面客户端。
 
-Windows 使用 `%LOCALAPPDATA%\Doubao\User Data\Local State`，Linux 使用 `$XDG_CONFIG_HOME/Doubao/Local State`（默认 `~/.config/Doubao/Local State`），macOS 使用 `~/Library/Application Support/Doubao/Local State`，同时兼容 `DoubaoWork` 目录。无本机客户端的 Linux 可导入包含本人客户端 `session.deviceId` 的账号备份。
+旧账号缺少设备上下文且本机客户端文件不可用时，实际使用前自动获取并保存官网上下文。已有完整桌面会话继续使用保存的信息。仅含 Cookie 的旧备份可直接导入并核验。完整备份携带 Web 或桌面会话信息，支持迁入其他电脑和 Linux 服务器。[设备上下文修复与验证](docs/web-device-context.md) · [账号迁移说明](docs/json-transfer.md)
 
-0.5.2 会在登录、备份导入和旧账号启动升级时保存取得的设备号与配套指纹。正常导出的账号 JSON 包含完整上下文，迁移后的目标设备优先使用账号携带的信息。每位用户使用自己客户端或备份中的设备信息。
-
-Windows 导出账号到隔离 Ubuntu 的真实迁移已通过，目标环境的网关和 Magpie Bun 宿主均返回 `OK`。无客户端服务器可按[账号迁移说明](docs/json-transfer.md)接入。
-
-上游 `710022004` 表示人工验证要求。0.6.2 将用户新发起的请求交给上游判定，完整成功后清除旧验证状态。待验证期间自动签到暂停，错误保留代码和请求编号。[模型名称与验证状态说明](docs/model-names-verification.md)
+上游 `710022004` 表示验证要求。用户新发起的请求会取得当次上游结果，完整成功后清除旧验证状态。待验证期间自动签到暂停，错误保留代码和请求编号。
 
 1. 使用同一个账号打开[豆包官网](https://www.doubao.com/chat/)，发一条普通消息并完成页面提示的验证。
 2. 点击工作台的「复测此账号」，或从 API 客户端重新发送请求。收到完整成功回复后清除待验证状态。
-3. 按当次错误处理会话失效、普通限流或人工验证。`device_context=missing` 提示需在已登录豆包客户端的设备上重新接入，或导入含设备上下文的账号备份。
+3. 按当次错误处理会话失效、普通限流或人工验证。持续失败的既有桌面会话可重新浏览器登录，取得当前官网会话。
 
 ## 数据与安全
 
