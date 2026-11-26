@@ -18,6 +18,8 @@ magpie plugin login doubaowork
 
 在独立浏览器窗口登录后，Magpie 会发现该账号可用的模型。供应商 ID 为 `doubaowork`，模型在 Magpie 中使用 `doubaowork/<实际模型ID>`。插件直接访问豆包，账号、凭据和转发由 Magpie 管理。
 
+0.6.4 同步修复浏览器启动通信，使用浏览器分配的临时回环端口，并记录启动失败的阶段、运行时和退出信息。网关诊断位于运行目录的 `browser-tmp/browser-startup-error.json`。[浏览器启动排查与验收范围](docs/browser-startup.md)
+
 无桌面的 Linux 可从独立网关导出账号 JSON 后导入。
 
 ```sh
